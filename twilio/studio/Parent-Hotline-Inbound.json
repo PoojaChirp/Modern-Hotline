@@ -59,7 +59,7 @@
         "type": "run-function",
         "transitions": [
           {
-            "next": "CallParents",
+            "next": "CallTheParents",
             "event": "success"
           },
           {
@@ -67,29 +67,47 @@
           }
         ],
         "properties": {
+          "service_sid": "ZS09d47b51546bc7b9211ecd9d7b164d6c",
+          "environment_sid": "ZEe159995943c1aa4a8dded3dfa8efff69",
           "offset": {
-            "x": 20,
-            "y": 210
-          }
+            "x": -70,
+            "y": 240
+          },
+          "function_sid": "ZH7f3d0a5a69973fce1d629a1ea2292fc8",
+          "parameters": [
+            {
+              "value": "ISdfc9538987ed9af98e113c0c148de718",
+              "key": "SYNC_SERVICE_SID"
+            },
+            {
+              "value": "{{trigger.call.To}}",
+              "key": "documentName"
+            }
+          ],
+          "url": "https://serverless-5852-dev.twil.io/sync/document/read"
         }
       },
       {
-        "name": "CallParents",
-        "type": "run-function",
+        "name": "CallTheParents",
+        "type": "make-http-request",
         "transitions": [
           {
             "next": "Connect_To_Conference",
             "event": "success"
           },
           {
-            "event": "fail"
+            "event": "failed"
           }
         ],
         "properties": {
           "offset": {
-            "x": -150,
-            "y": 480
-          }
+            "x": 290,
+            "y": 520
+          },
+          "method": "POST",
+          "content_type": "application/json;charset=utf-8",
+          "body": "{\n   \"to\":\"+15167105489\",\n   \"from\":\"{{trigger.call.To}}\",\n   \"parameters\":{\n      \"Conference\":\"{{trigger.call.From}}\"\n   },\n   \"STUDIO_FLOW_SID\":\"FWdd75f3a03dd4525315c49eb342fc5942\"\n}",
+          "url": "https://serverless-5852-dev.twil.io/studio/execution/create"
         }
       }
     ],
