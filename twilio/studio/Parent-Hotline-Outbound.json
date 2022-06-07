@@ -1,0 +1,103 @@
+{
+    "description": "Parent-Hotline-Outbound",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "event": "incomingMessage"
+          },
+          {
+            "event": "incomingCall"
+          },
+          {
+            "event": "incomingConversationMessage"
+          },
+          {
+            "next": "call_user_1",
+            "event": "incomingRequest"
+          },
+          {
+            "event": "incomingParent"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "call_user_1",
+        "type": "make-outgoing-call-v2",
+        "transitions": [
+          {
+            "next": "connect_call_1",
+            "event": "answered"
+          },
+          {
+            "event": "busy"
+          },
+          {
+            "event": "noAnswer"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "machine_detection_speech_threshold": "2400",
+          "detect_answering_machine": false,
+          "send_digits": "",
+          "sip_auth_username": "",
+          "offset": {
+            "x": 420,
+            "y": 270
+          },
+          "recording_status_callback": "",
+          "sip_auth_password": "",
+          "recording_channels": "mono",
+          "timeout": 60,
+          "machine_detection": "Enable",
+          "trim": "true",
+          "record": false,
+          "machine_detection_speech_end_threshold": "1200",
+          "machine_detection_timeout": "30",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "machine_detection_silence_timeout": "5000"
+        }
+      },
+      {
+        "name": "connect_call_1",
+        "type": "connect-call-to",
+        "transitions": [
+          {
+            "event": "callCompleted"
+          },
+          {
+            "event": "hangup"
+          }
+        ],
+        "properties": {
+          "sip_username": "",
+          "sip_endpoint": "",
+          "offset": {
+            "x": 220,
+            "y": 530
+          },
+          "caller_id": "{{contact.channel.address}}",
+          "noun": "conference",
+          "to": "{{trigger.request.parameters.Conference}}",
+          "sip_password": "",
+          "timeout": 30
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }

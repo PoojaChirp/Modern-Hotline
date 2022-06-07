@@ -1,0 +1,100 @@
+{
+    "description": "Parent-Hotline-Inbound",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "event": "incomingMessage"
+          },
+          {
+            "next": "GetSyncRecord",
+            "event": "incomingCall"
+          },
+          {
+            "event": "incomingConversationMessage"
+          },
+          {
+            "event": "incomingRequest"
+          },
+          {
+            "event": "incomingParent"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "Connect_To_Conference",
+        "type": "connect-call-to",
+        "transitions": [
+          {
+            "event": "callCompleted"
+          },
+          {
+            "event": "hangup"
+          }
+        ],
+        "properties": {
+          "sip_username": "",
+          "sip_endpoint": "",
+          "offset": {
+            "x": -100,
+            "y": 850
+          },
+          "caller_id": "{{contact.channel.address}}",
+          "noun": "conference",
+          "to": "{{trigger.call.From}}",
+          "sip_password": "",
+          "timeout": 30
+        }
+      },
+      {
+        "name": "GetSyncRecord",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "CallParents",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 20,
+            "y": 210
+          }
+        }
+      },
+      {
+        "name": "CallParents",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "Connect_To_Conference",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -150,
+            "y": 480
+          }
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }
