@@ -9,7 +9,7 @@
             "event": "incomingMessage"
           },
           {
-            "next": "GetSyncRecord",
+            "next": "SetGlobalVariables",
             "event": "incomingCall"
           },
           {
@@ -44,8 +44,8 @@
           "sip_username": "",
           "sip_endpoint": "",
           "offset": {
-            "x": -100,
-            "y": 850
+            "x": 250,
+            "y": 1250
           },
           "caller_id": "{{contact.channel.address}}",
           "noun": "conference",
@@ -55,44 +55,11 @@
         }
       },
       {
-        "name": "GetSyncRecord",
-        "type": "run-function",
-        "transitions": [
-          {
-            "next": "CallTheParents",
-            "event": "success"
-          },
-          {
-            "event": "fail"
-          }
-        ],
-        "properties": {
-          "service_sid": "ZS09d47b51546bc7b9211ecd9d7b164d6c",
-          "environment_sid": "ZEe159995943c1aa4a8dded3dfa8efff69",
-          "offset": {
-            "x": -70,
-            "y": 240
-          },
-          "function_sid": "ZH7f3d0a5a69973fce1d629a1ea2292fc8",
-          "parameters": [
-            {
-              "value": "ISdfc9538987ed9af98e113c0c148de718",
-              "key": "SYNC_SERVICE_SID"
-            },
-            {
-              "value": "{{trigger.call.To}}",
-              "key": "documentName"
-            }
-          ],
-          "url": "https://serverless-5852-dev.twil.io/sync/document/read"
-        }
-      },
-      {
-        "name": "CallTheParents",
+        "name": "CallTheParent",
         "type": "make-http-request",
         "transitions": [
           {
-            "next": "Connect_To_Conference",
+            "next": "CheckParentSize",
             "event": "success"
           },
           {
@@ -101,13 +68,153 @@
         ],
         "properties": {
           "offset": {
-            "x": 290,
-            "y": 520
+            "x": -10,
+            "y": 650
           },
           "method": "POST",
           "content_type": "application/json;charset=utf-8",
-          "body": "{\n   \"to\":\"+15167105489\",\n   \"from\":\"{{trigger.call.To}}\",\n   \"parameters\":{\n      \"Conference\":\"{{trigger.call.From}}\"\n   },\n   \"STUDIO_FLOW_SID\":\"FWdd75f3a03dd4525315c49eb342fc5942\"\n}",
-          "url": "https://serverless-5852-dev.twil.io/studio/execution/create"
+          "body": "{% assign index = flow.variables.currentIndex | plus: 0 %}\n{\n   \"to\":\"{{widgets.GetSyncRecord.parsed.data.Parents[index]}}\",\n   \"from\":\"{{trigger.call.To}}\",\n   \"parameters\":{\n      \"Conference\":\"{{trigger.call.From}}\"\n   },\n   \"STUDIO_FLOW_SID\":\"{{flow.variables.PARENT_HOTLINE_OUTBOUND_FLOW_SID}}\"\n}",
+          "url": "https://{{flow.variables.SERVERLESS_DOMAIN_NAME}}.twil.io/studio/execution/create"
+        }
+      },
+      {
+        "name": "SetLoopVariables",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "CallTheParent",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{widgets.GetSyncRecord.parsed.data.Parents.size}}",
+              "key": "size"
+            },
+            {
+              "value": "0",
+              "key": "currentIndex"
+            },
+            {
+              "value": "1",
+              "key": "nextIndex"
+            }
+          ],
+          "offset": {
+            "x": 430,
+            "y": 250
+          }
+        }
+      },
+      {
+        "name": "CheckParentSize",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "Connect_To_Conference",
+            "event": "noMatch"
+          },
+          {
+            "next": "UpdateLoopVariables",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "If value less_than {{flow.variables.nextIndex}}",
+                "arguments": [
+                  "{{flow.variables.nextIndex}}"
+                ],
+                "type": "less_than",
+                "value": "{{flow.variables.size}}"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{flow.variables.nextIndex}}",
+          "offset": {
+            "x": 470,
+            "y": 1030
+          }
+        }
+      },
+      {
+        "name": "UpdateLoopVariables",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "CallTheParent",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{% assign index = flow.variables.nextIndex | plus: 0 %}{{index}}",
+              "key": "currentIndex"
+            },
+            {
+              "value": "{% assign index = flow.variables.nextIndex\n| plus: 1 %}{{index}}",
+              "key": "nextIndex"
+            }
+          ],
+          "offset": {
+            "x": 530,
+            "y": 600
+          }
+        }
+      },
+      {
+        "name": "SetGlobalVariables",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "GetSyncRecord",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "ISdfc9538987ed9af98e113c0c148de718",
+              "key": "SYNC_SERVICE_SID"
+            },
+            {
+              "value": "FWdd75f3a03dd4525315c49eb342fc5942",
+              "key": "PARENT_HOTLINE_OUTBOUND_FLOW_SID"
+            },
+            {
+              "value": "serverless-5852-dev",
+              "key": "SERVERLESS_DOMAIN_NAME"
+            }
+          ],
+          "offset": {
+            "x": -360,
+            "y": 180
+          }
+        }
+      },
+      {
+        "name": "GetSyncRecord",
+        "type": "make-http-request",
+        "transitions": [
+          {
+            "next": "SetLoopVariables",
+            "event": "success"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -310,
+            "y": 410
+          },
+          "method": "POST",
+          "content_type": "application/json;charset=utf-8",
+          "body": "{\n   \"SYNC_SERVICE_SID\":\"{{flow.variables.SYNC_SERVICE_SID}}\",\n   \"documentName\":\"{{trigger.call.To}}\"\n}",
+          "url": "https://{{flow.variables.SERVERLESS_DOMAIN_NAME}}.twil.io/sync/document/read"
         }
       }
     ],
